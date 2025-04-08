@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-Sim: Urinal Splashback Simulator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="ui-container">
+        <h1>Urinal Splashback Simulator</h1>
+        
+        <div class="upload-container">
+            <label for="model-upload">Upload Urinal Model:</label>
+            <input type="file" id="model-upload" accept=".glb,.gltf,.obj">
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <h3>Flow Controls</h3>
+                <div class="control-item">
+                    <label for="flow-rate">Flow Rate:</label>
+                    <input type="range" id="flow-rate" min="1" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Direction Controls</h3>
+                <div class="control-item">
+                    <label for="direction-x">X Direction:</label>
+                    <input type="range" id="direction-x" min="-1" max="1" step="0.1" value="0">
+                </div>
+                <div class="control-item">
+                    <label for="direction-y">Y Direction:</label>
+                    <input type="range" id="direction-y" min="-1" max="1" step="0.1" value="-1">
+                </div>
+                <div class="control-item">
+                    <label for="direction-z">Z Direction:</label>
+                    <input type="range" id="direction-z" min="-1" max="1" step="0.1" value="0">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Position Controls</h3>
+                <div class="control-item">
+                    <label for="position-x">X Position:</label>
+                    <input type="range" id="position-x" min="-5" max="5" step="0.1" value="0">
+                </div>
+                <div class="control-item">
+                    <label for="position-y">Y Position:</label>
+                    <input type="range" id="position-y" min="0" max="10" step="0.1" value="5">
+                </div>
+                <div class="control-item">
+                    <label for="position-z">Z Position:</label>
+                    <input type="range" id="position-z" min="-5" max="5" step="0.1" value="0">
+                </div>
+            </div>
+
+            <button id="reset-heatmap">Reset Heatmap</button>
+            <button id="download-heatmap">Download Results</button>
+            
+            <div class="info-panel">
+                <div class="heatmap-legend">
+                    <h3>Splashback Heatmap</h3>
+                    <div class="legend-item">
+                        <span class="color-box blue"></span>
+                        <span>High Splashback</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="color-box green"></span>
+                        <span>Medium Splashback</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="color-box yellow"></span>
+                        <span>Low Splashback</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="color-box red"></span>
+                        <span>Minimal Splashback</span>
+                    </div>
+                </div>
+                <div id="status"></div>
+                <div id="debug-info" class="debug-info"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="canvas-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+    <script src="js/main.js" type="module"></script>
+</body>
+</html>
