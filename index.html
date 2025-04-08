@@ -51,8 +51,8 @@
         <div class="heatmap-legend">
             <div class="legend-gradient"></div>
             <div class="legend-labels">
-                <span>Low</span>
                 <span>High</span>
+                <span>Low</span>
             </div>
         </div>
         <div id="stats">
@@ -72,5 +72,33 @@
         }
     </script>
     <script type="module" src="js/main.js"></script>
+    
+    <script type="module">
+        // Wait for the page and main script to load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Give main.js a moment to initialize
+            setTimeout(() => {
+                // Create a fetch request to load the default model
+                fetch('assets/urinal.obj')
+                    .then(response => response.blob())
+                    .then(blob => {
+                        // Create a File object from the blob
+                        const file = new File([blob], 'urinal.obj', { type: 'model/obj' });
+                        
+                        // Create a custom event to simulate file selection
+                        const fileInput = document.getElementById('model-upload');
+                        
+                        // Set the file to the input
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        fileInput.files = dataTransfer.files;
+                        
+                        // Dispatch a change event to trigger the model loading
+                        fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    })
+                    .catch(error => console.error('Error loading default model:', error));
+            }, 500);
+        });
+    </script>
 </body>
 </html>

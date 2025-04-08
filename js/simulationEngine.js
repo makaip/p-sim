@@ -13,6 +13,7 @@ function simulateSplashback(model, sourcePoint, forceValue) {
     // Create results data structure
     const results = {
         faceData: [],
+        vertexData: new Map(), // Add vertex data for interpolation
         minSplashback: Infinity,
         maxSplashback: 0,
         averageSplashback: 0
@@ -48,6 +49,7 @@ function simulateSplashback(model, sourcePoint, forceValue) {
             // Get face vertices and normal
             const normalVectors = [];
             const vertexPositions = [];
+            const vertexIndices = [];
             
             // Get the three vertices of this face
             for (let j = 0; j < 3; j++) {
@@ -67,6 +69,7 @@ function simulateSplashback(model, sourcePoint, forceValue) {
                 normalVectors.push(new THREE.Vector3(nx, ny, nz).transformDirection(mesh.matrixWorld));
                 
                 face.vertices.push({ x, y, z });
+                vertexIndices.push(vertexIndex);
             }
             
             // Calculate face centroid
@@ -87,13 +90,92 @@ function simulateSplashback(model, sourcePoint, forceValue) {
             if (faceSplashback > results.maxSplashback) results.maxSplashback = faceSplashback;
             totalSplashback += faceSplashback;
             faceCount++;
+            
+            // Add this splashback value to each vertex of the face for interpolation
+            for (let j = 0; j < 3; j++) {
+                const vertexIndex = vertexIndices[j];
+                if (!results.vertexData.has(vertexIndex)) {
+                    results.vertexData.set(vertexIndex, {
+                        splashbackTotal: 0,
+                        faceCount: 0
+                    });
+                }
+                
+                const vertexInfo = results.vertexData.get(vertexIndex);
+                vertexInfo.splashbackTotal += faceSplashback;
+                vertexInfo.faceCount++;
+            }
         }
     }
     
     // Calculate average
     results.averageSplashback = faceCount > 0 ? totalSplashback / faceCount : 0;
     
+    // Calculate per-vertex average splashback values for interpolation
+    calculateVertexColors(results);
+    
     return results;
+}
+
+// Calculate per-vertex colors for smooth gradient interpolation
+function calculateVertexColors(results) {
+    // Calculate average splashback value per vertex
+    for (const [vertexIndex, vertexInfo] of results.vertexData.entries()) {
+        vertexInfo.averageSplashback = vertexInfo.faceCount > 0 
+            ? vertexInfo.splashbackTotal / vertexInfo.faceCount
+            : 0;
+    }
+    
+    // Now create colors with inverted gradient (higher splashback = cooler color)
+    for (const [vertexIndex, vertexInfo] of results.vertexData.entries()) {
+        // Normalize the value between 0 and 1
+        let normalizedValue = 0;
+        if (results.maxSplashback > results.minSplashback) {
+            normalizedValue = (vertexInfo.averageSplashback - results.minSplashback) / 
+                             (results.maxSplashback - results.minSplashback);
+        }
+        
+        // Invert the gradient (1 - normalizedValue)
+        normalizedValue = 1 - normalizedValue;
+        
+        // Calculate RGB color (example: red to blue gradient)
+        vertexInfo.color = {
+            r: normalizedValue,
+            g: 0,
+            b: 1 - normalizedValue
+        };
+    }
+}
+
+// Apply the interpolated vertex colors to a mesh
+function applyVertexColors(mesh, results) {
+    const geometry = mesh.geometry;
+    const positionAttribute = geometry.attributes.position;
+    const colors = new Float32Array(positionAttribute.count * 3);
+    
+    // For indexed geometries
+    const indices = geometry.index ? geometry.index.array : null;
+    
+    for (let i = 0; i < positionAttribute.count; i++) {
+        const vertexIndex = indices ? indices[i] : i;
+        const vertexInfo = results.vertexData.get(vertexIndex);
+        
+        if (vertexInfo) {
+            const idx = i * 3;
+            colors[idx] = vertexInfo.color.r;
+            colors[idx + 1] = vertexInfo.color.g;
+            colors[idx + 2] = vertexInfo.color.b;
+        }
+    }
+    
+    // Add the color attribute to the geometry
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    
+    // Update the material to use vertex colors
+    if (mesh.material) {
+        mesh.material.vertexColors = true;
+        mesh.material.needsUpdate = true;
+    }
 }
 
 // Calculate splashback factor for a specific face
@@ -197,5 +279,6 @@ function findIntersection(trajectoryPoints, facePoint, faceNormal) {
 
 // Export the functions we need to access from other modules
 export const SimulationEngine = {
-    simulateSplashback
+    simulateSplashback,
+    applyVertexColors // Export the new function
 };
